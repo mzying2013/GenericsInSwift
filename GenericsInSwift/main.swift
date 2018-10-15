@@ -31,12 +31,39 @@ protocol Money {
     
     var amount : Float { get }
     
-//    func sum<M : Money>(with money : M) -> M where M.Currency == Currency
+    func sum<M : Money>(with money : M) -> M where M.Currency == Currency
+}
+
+extension Money where Currency == EURCurrency{
+    func printAmount() {
+        print("\(amount) EUR")
+    }
 }
 
 
 struct RMBCurrency : TradeCurrency{
     
+}
+
+struct EURCurrency : TradeCurrency{
+    
+}
+
+
+struct IPadMoney : Money{
+    typealias Currency = EURCurrency
+    
+    var currency: EURCurrency{
+        return EURCurrency()
+    }
+    
+    var amount: Float{
+        return 2000
+    }
+    
+    func sum<M>(with money: M) -> M where M : Money, IPadMoney.Currency == M.Currency {
+        return IPadMoney() as! M
+    }
 }
 
 
@@ -51,9 +78,9 @@ struct IPhoneMoney : Money {
         return 5988
     }
     
-//    func sum<M>(with money: M) -> M where M : Money, IPhoneMoney.Currency == M.Currency {
-//        return IPhoneMoney()
-//    }
+    func sum<M>(with money: M) -> M where M : Money, IPhoneMoney.Currency == M.Currency {
+        return IPhoneMoney() as! M
+    }
 }
 
 
@@ -116,8 +143,8 @@ var pastaInventory = InventoryList<PastaPackage>()
 
 pastaInventory.add(item: PastaPackage())
 
-var tomatoSauceInventory = InventoryList<TomatoSauce>()
-_ = tomatoSauceInventory.remove()
+//var tomatoSauceInventory = InventoryList<TomatoSauce>()
+//_ = tomatoSauceInventory.remove()
 
 
 
@@ -139,11 +166,32 @@ protocol Storage {
     mutating func remove() -> Item
     
     func showCurrentInventory() -> [Item]
+    
+//    associatedtype Iterator : IteratorProtocol where Iterator.Element == Item
+    
+//    func makeIterator() -> Iterator
+}
+
+
+extension Storage{
+    //subscript 关键字，让对象支持下标访问。
+    subscript<Indices: Sequence>(indices: Indices) -> [Item] where Indices.Iterator.Element == Int{
+        
+        return indices.compactMap { (index) -> Item? in
+            let count = items.count
+            
+            if index + 1 > count || index < 0{
+                return nil
+            }
+            
+            return items[index]
+        }
+    }
 }
 
 
 struct Food : StorableItem{
-    
+    var name : String
 }
 
 struct Mzyingstorage : Storage {
@@ -166,7 +214,17 @@ struct Mzyingstorage : Storage {
         return items
     }
     
+    func test() -> [Food] {
+        return self[[1,0,3]]
+    }
 }
 
+
+var mzyingStorage = Mzyingstorage()
+mzyingStorage.add(item: Food(name: "A"))
+mzyingStorage.add(item: Food(name: "B"))
+mzyingStorage.add(item: Food(name: "C"))
+
+print("test:\(mzyingStorage.test())")
 
 
